@@ -4,16 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zenith-greeter"
-version = "0.1.0"
-description = "A small example Python package with a reusable Greeter class"
+version = "0.2.0"
+description = "A dependency-free collection of practical Python utilities"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [{ name = "Zenith OX" }]
-keywords = ["greeting", "example", "zenith"]
+keywords = ["utilities", "text", "numbers", "dates", "validation", "json", "environment", "zenith"]
 classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [tool.setuptools.packages.find]

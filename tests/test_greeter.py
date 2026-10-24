@@ -1,4 +1,4 @@
-"""Tests for the public Greeter API."""
+"""Tests for the public Greeter API; retained for backward compatibility."""
 
 import unittest
 
@@ -7,34 +7,19 @@ from zenith_greeter import Greeter
 
 class GreeterTests(unittest.TestCase):
     def test_greets_named_person(self):
-        self.assertEqual(
-            Greeter("Awwal").greet(),
-            "Hello, Awwal! Welcome to Python packages.",
-        )
+        self.assertEqual(Greeter("Awwal").greet(), "Hello, Awwal! Welcome to Python packages.")
 
     def test_default_name(self):
-        self.assertEqual(
-            Greeter().greet(),
-            "Hello, there! Welcome to Python packages.",
-        )
+        self.assertEqual(Greeter().greet(), "Hello, there! Welcome to Python packages.")
 
     def test_blank_name_uses_default(self):
-        self.assertEqual(
-            Greeter("   ").greet(),
-            "Hello, there! Welcome to Python packages.",
-        )
+        self.assertEqual(Greeter("   ").greet(), "Hello, there! Welcome to Python packages.")
 
     def test_trims_name_and_greeting(self):
-        self.assertEqual(
-            Greeter("  Ada  ", greeting="  Hi  ").greet(),
-            "Hi, Ada! Welcome to Python packages.",
-        )
+        self.assertEqual(Greeter("  Ada  ", greeting="  Hi  ").greet(), "Hi, Ada! Welcome to Python packages.")
 
     def test_custom_greeting_and_welcome_message(self):
-        self.assertEqual(
-            Greeter("Ada", "Welcome", "Glad you are here.").greet(),
-            "Welcome, Ada! Glad you are here.",
-        )
+        self.assertEqual(Greeter("Ada", "Welcome", "Glad you are here.").greet(), "Welcome, Ada! Glad you are here.")
 
     def test_empty_welcome_message_is_omitted(self):
         self.assertEqual(Greeter("Ada", welcome_message="  ").greet(), "Hello, Ada!")
