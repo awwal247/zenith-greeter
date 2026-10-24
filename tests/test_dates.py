@@ -24,6 +24,7 @@ class DateTests(unittest.TestCase):
         now = datetime(2026, 1, 1, 12, 0, 0)
         self.assertEqual(time_ago(now - timedelta(minutes=5), now), "5 minutes ago")
         self.assertEqual(time_ago(now + timedelta(days=2), now), "in 2 days")
+        self.assertEqual(time_ago(now + timedelta(seconds=2), now), "just now")
         self.assertEqual(time_ago(now, now), "just now")
 
 

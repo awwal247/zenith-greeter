@@ -1,6 +1,6 @@
 """Date and time formatting helpers."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Optional, Union
 
 DateLike = Union[date, datetime]
@@ -37,12 +37,12 @@ def time_ago(value: datetime, now: Optional[datetime] = None) -> str:
     elif not isinstance(now, datetime):
         raise TypeError("now must be a datetime")
     delta = now - value
-    seconds = int(abs(delta.total_seconds()))
-    future = delta.total_seconds() < 0
+    total_seconds = delta.total_seconds()
+    seconds = int(abs(total_seconds))
+    future = total_seconds < 0
 
     if seconds < 5:
-        phrase = "just now"
-        return "in " + phrase if future else phrase
+        return "just now"
     units = (
         (60, "second"),
         (60, "minute"),
