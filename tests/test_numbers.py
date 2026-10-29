@@ -1,6 +1,6 @@
 import unittest
 
-from zenith_greeter.numbers import clamp, in_range, is_even, is_odd, percentage
+from zenith_greeter.numbers import avg, clamp, in_range, is_even, is_odd, median, percentage, round_to
 
 
 class NumberTests(unittest.TestCase):
@@ -34,6 +34,39 @@ class NumberTests(unittest.TestCase):
             clamp(True, 0, 2)
         with self.assertRaises(TypeError):
             is_even(True)
+
+    def test_avg(self):
+        self.assertEqual(avg(1, 2, 3), 2.0)
+        self.assertEqual(avg(5, 10), 7.5)
+
+    def test_avg_rejects_no_args(self):
+        with self.assertRaises(ValueError):
+            avg()
+
+    def test_avg_with_bad_args(self):
+        with self.assertRaises(TypeError):
+            avg(True)
+
+    def test_median_odd(self):
+        self.assertEqual(median(1, 3, 2, 5, 4), 3.0)
+
+    def test_median_even(self):
+        self.assertEqual(median(1, 2, 3, 4), 2.5)
+
+    def test_median_rejects_no_args(self):
+        with self.assertRaises(ValueError):
+            median()
+
+    def test_round_to(self):
+        self.assertEqual(round_to(3.14159, ndigits=2), 3.14)
+        self.assertEqual(round_to(42, ndigits=0), 42)
+        self.assertEqual(round_to(7.876, ndigits=1), 7.9)
+
+    def test_round_to_invalid_ndigits(self):
+        with self.assertRaises(TypeError):
+            round_to(1.2, ndigits="2")
+        with self.assertRaises(ValueError):
+            round_to(1.2, ndigits=-1)
 
 
 if __name__ == "__main__":
