@@ -1,9 +1,16 @@
-"""Small, predictable text-processing helpers."""
+"""Small, predictable text-processing helpers.
 
+The random string helpers are intended for ordinary identifiers and examples.
+Use :func:`zenith_greeter.identifiers.random_token` for security-sensitive tokens.
+"""
+import hashlib
+import random
 import re
+import secrets
 import string
 import unicodedata
-from urllib.parse import parse_qs, urlparse
+from typing import Any, Dict, Optional
+from urllib.parse import parse_qs, urlencode, urlparse
 
 
 def normalize_whitespace(value: str) -> str:
@@ -19,7 +26,7 @@ def word_count(value: str) -> int:
 
 
 def slugify(value: str, separator: str = "-") -> str:
-    """Convert text to a simple lowercase ASCII slug."""
+    """Convert text to a lowercase ASCII slug using *separator*."""
     if not isinstance(value, str):
         raise TypeError("value must be a string")
     if not isinstance(separator, str) or not separator:
@@ -31,7 +38,7 @@ def slugify(value: str, separator: str = "-") -> str:
 
 
 def truncate(value: str, max_length: int, suffix: str = "…") -> str:
-    """Limit a string to max_length characters, including any suffix."""
+    """Limit a string to *max_length* characters, including the suffix."""
     if not isinstance(value, str):
         raise TypeError("value must be a string")
     if not isinstance(max_length, int) or isinstance(max_length, bool):
@@ -49,145 +56,70 @@ def truncate(value: str, max_length: int, suffix: str = "…") -> str:
     return value[: max_length - len(suffix)] + suffix
 
 
-def random_string(length: int = 12, alphabet: str = None) -> str:
-    """Generate a random string of the specified length.
+def random_string(length: int = 12, alphabet: Optional[str] = None) -> str:
+    """Generate a non-cryptographic random string.
 
-    Args:
-        length: Number of characters in the result.
-        alphabet: Custom character set. Uses letters+digits by default.
-
-    Returns:
-        A randomly generated string.
-
-    Example:
-        >>> random_string(8)
-        'aB3dE5fG'
+    For API keys, reset links, session secrets, or other security-sensitive
+    values, use :func:`zenith_greeter.identifiers.random_token` instead.
     """
-    import random
-
+    if not isinstance(length, int) or isinstance(length, bool):
+        raise TypeError("length must be an integer")
+    if length < 0:
+        raise ValueError("length cannot be negative")
     if alphabet is None:
         alphabet = string.ascii_letters + string.digits
+    if not isinstance(alphabet, str):
+        raise TypeError("alphabet must be a string")
+    if length and not alphabet:
+        raise ValueError("alphabet cannot be empty when length is positive")
     return "".join(random.choice(alphabet) for _ in range(length))
 
 
 def random_password(length: int = 12) -> str:
-    """Generate a random password meeting common requirements.
+    """Generate a password containing at least two special characters.
 
-    Includes letters, digits, and at least two special characters from
-    !@#$%^&*().
-
-    Args:
-        length: Total password length (must be >= 4).
-
-    Returns:
-        A randomly generated password string.
-
-    Raises:
-        ValueError: If length is less than 4.
-
-    Example:
-        >>> random_password(10)
-        'K9$mP2@qL1'
+    Uses the system-backed :mod:`secrets` generator. This is a convenience
+    generator, not a substitute for an application's password policy.
     """
+    if not isinstance(length, int) or isinstance(length, bool):
+        raise TypeError("length must be an integer")
     if length < 4:
         raise ValueError("password length must be at least 4")
-
-    import random
-
     specials = "!@#$%^&*()"
-    # Reserve 2 spots for special characters
-    result = [
-        random.choice(specials),
-        random.choice(specials),
-    ]
-    # Fill remainder from full alphabet
     alphabet = string.ascii_letters + string.digits + specials
-    result += [
-        random.choice(alphabet) for _ in range(length - 2)
-    ]
-    # Shuffle to randomize special positions
-    random.shuffle(result)
-    return "".join(result)[:length]
+    result = [secrets.choice(specials), secrets.choice(specials)]
+    result.extend(secrets.choice(alphabet) for _ in range(length - 2))
+    secrets.SystemRandom().shuffle(result)
+    return "".join(result)
 
 
 def md5(value: str) -> str:
-    """Return the MD5 hex digest of a string.
-
-    Args:
-        value: The string to hash.
-
-    Returns:
-        A 32-character hexadecimal string.
-
-    Example:
-        >>> md5("hello")
-        '5d41402abc4b2a76b9719d911017c592'
-    """
-    import hashlib
-
+    """Return an MD5 hex digest for compatibility/checksum use, not passwords."""
+    if not isinstance(value, str):
+        raise TypeError("value must be a string")
     return hashlib.md5(value.encode("utf-8")).hexdigest()
 
 
 def sha256(value: str) -> str:
-    """Return the SHA-256 hex digest of a string.
-
-    Args:
-        value: The string to hash.
-
-    Returns:
-        A 64-character hexadecimal string.
-
-    Example:
-        >>> sha256("hello")
-        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
-    """
-    import hashlib
-
+    """Return the SHA-256 hex digest of a string."""
+    if not isinstance(value, str):
+        raise TypeError("value must be a string")
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def build_query_string(params: dict, separator: str = "&") -> str:
-    """Encode a dictionary as a URL query string.
-
-    Args:
-        params: Mapping of key/value pairs. Values are converted to strings.
-        separator: Separator between parameters (default "&").
-
-    Returns:
-        A query string starting with "?" if params is non-empty, otherwise "".
-
-    Example:
-        >>> build_query_string({"page": 2, "q": "hello"})
-        'page=2&q=hello'
-    """
+def build_query_string(params: Dict[str, Any], separator: str = "&") -> str:
+    """URL-encode mapping values into a query string without a leading '?'."""
     if not isinstance(params, dict):
         raise TypeError("params must be a dict")
     if not isinstance(separator, str) or not separator:
         raise ValueError("separator must be a non-empty string")
-
-    if not params:
-        return ""
-
-    parts = []
-    for key, value in params.items():
-        parts.append(f"{key}={value}")
-    return separator.join(parts)
+    return urlencode(params, doseq=True, safe="") .replace("&", separator)
 
 
-def parse_query_string(url: str) -> dict:
-    """Parse a URL query string into a dictionary.
-
-    Args:
-        url: A full URL or just the query portion (e.g. "?key=val").
-
-    Returns:
-        A dict mapping keys to lists of values (as returned by parse_qs).
-
-    Example:
-        >>> parse_query_string("?page=2&page=3&q=hello")
-        {'page': ['2', '3'], 'q': ['hello']}
-    """
+def parse_query_string(url: str) -> Dict[str, list]:
+    """Parse a URL or query string into a mapping of keys to value lists."""
     if not isinstance(url, str):
         raise TypeError("url must be a string")
     parsed = urlparse(url)
-    return parse_qs(parsed.query)
+    query = parsed.query if parsed.scheme or parsed.netloc or parsed.path else url.lstrip("?")
+    return parse_qs(query)
