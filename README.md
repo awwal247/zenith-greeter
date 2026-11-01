@@ -1,133 +1,119 @@
 # Zenith Greeter
 
-**Zenith Greeter** is a dependency-free Python utility toolkit for everyday tasks. The package keeps its original `Greeter` API and adds helpers for text, numbers, dates and times, validation, JSON/files, and environment variables.
+A lightweight, dependency-free Python utility toolkit for everyday development. The original `Greeter` class remains supported; the package now also includes practical helpers for JSON, collections, nested dictionaries, identifiers, retries and timing.
 
-- **Distribution name:** `zenith-greeter`
-- **Import name:** `zenith_greeter`
-- **Python:** 3.9+
-- **Runtime dependencies:** none
+- Distribution: `zenith-greeter`
+- Import package: `zenith_greeter`
+- Python: 3.9+
+- Runtime dependencies: none
 
-## Installation
-
-When published to PyPI:
+## Install
 
 ```bash
 python -m pip install --upgrade zenith-greeter
 ```
 
-For local development:
-
-```bash
-python -m pip install -e .
-python -m unittest discover -s tests -v
-```
-
 ## Quick start
 
-Import only what you need:
-
 ```python
-from datetime import date, datetime
-from pathlib import Path
-
-from zenith_greeter import (
-    Greeter,
-    clamp,
-    days_between,
-    get_env_bool,
-    is_valid_email,
-    read_json,
-    slugify,
-    time_ago,
-    write_json,
-)
+from zenith_greeter import Greeter, clamp, slugify
+from zenith_greeter import dictionaries, json_tools, lists
 
 print(Greeter("Awwal").greet())
-# Hello, Awwal! Welcome to Python packages.
-
-print(slugify("Zenith Greeter: Python Utilities"))
-# zenith-greeter-python-utilities
-
+print(slugify("Zenith Greeter Toolkit"))
 print(clamp(120, 0, 100))
-# 100
 
-print(days_between(date(2026, 1, 1), date(2026, 1, 8)))
-# 7
-
-print(time_ago(datetime(2026, 1, 1, 11, 55), now=datetime(2026, 1, 1, 12, 0)))
-# 5 minutes ago
-
-print(is_valid_email("developer@example.com"))
-# True
-
-settings = read_json("settings.json")
-debug = get_env_bool("APP_DEBUG", default=False)
-write_json(Path("output") / "result.json", {"debug": debug})
+settings = {"account": {"profile": {"name": "Awwal"}}}
+print(dictionaries.deep_get(settings, "account.profile.name"))
+print(lists.chunk([1, 2, 3, 4, 5], 2))
+print(json_tools.pretty({"active": True, "name": "Zenith"}))
 ```
 
-## Modules and functions
+## Modules
 
-### Greetings
+| Module | Purpose |
+|---|---|
+| `greeter` | Original configurable greeting class |
+| `text` | Slugs, whitespace, truncation, query strings and hashes |
+| `validation` | Lightweight email, URL and string checks |
+| `numbers` | Clamp, ranges, parity, averages, median and percentages |
+| `dates` | Date differences, formatting and relative time |
+| `files` | Directory creation and JSON/file helpers |
+| `environment` | Typed environment-variable access and logger setup |
+| `json_tools` | JSON encode/decode, pretty-print, minify and JSON Lines |
+| `lists` | Chunking, deduplication, flattening and partitioning |
+| `dictionaries` | Nested lookup/update, merge and flatten |
+| `identifiers` | UUIDs and secure short IDs/tokens |
+| `retry` | Configurable retry decorator with backoff and jitter |
+| `timer` | Context-manager and direct function timing |
+| `decorators` | Deprecation warnings, call counts and memoization |
+| `cache` | Bounded, process-local TTL cache |
+| `logger` | Console and optional file logger setup |
+| `pagination` | In-memory pagination for finite iterables |
 
-- `Greeter(name="there", greeting="Hello", welcome_message="Welcome to Python packages.")`
-- `Greeter.greet()`
+## Examples
 
-The original `from zenith_greeter import Greeter` import and greeting output are retained.
+### Chunk a list
 
-### Text — `zenith_greeter.text`
+```python
+from zenith_greeter.lists import chunk
+print(chunk([1, 2, 3, 4, 5], 2))
+# [[1, 2], [3, 4], [5]]
+```
 
-- `normalize_whitespace(value)`: collapse repeated whitespace.
-- `word_count(value)`: count whitespace-separated words.
-- `slugify(value, separator="-")`: create a lowercase ASCII slug.
-- `truncate(value, max_length, suffix="…")`: limit text length including the suffix.
+### Read nested configuration
 
-### Numbers — `zenith_greeter.numbers`
+```python
+from zenith_greeter.dictionaries import deep_get
+config = {"database": {"connection": {"port": 5432}}}
+print(deep_get(config, "database.connection.port", default=3306))
+```
 
-- `clamp(value, minimum, maximum)`
-- `percentage(part, whole, decimals=2)`
-- `in_range(value, minimum, maximum)`: inclusive bounds.
-- `is_even(value)` and `is_odd(value)`
+### Retry a temporary operation
 
-Boolean values are rejected by numeric helpers that expect numbers or integers. Invalid bounds and zero percentage denominators raise clear errors.
+```python
+from zenith_greeter.retry import retry
 
-### Dates and times — `zenith_greeter.dates`
+@retry(max_attempts=3, delay=0.5, backoff=2, jitter=True)
+def fetch_status():
+    return call_service()
+```
 
-- `format_datetime(value, fmt="%Y-%m-%d %H:%M:%S")`
-- `days_between(start, end)`: absolute calendar-day difference between `date` objects.
-- `time_ago(value, now=None)`: human-readable relative time.
+Retries include the first attempt. Only retry operations that are safe to repeat, or protect side effects with an idempotency strategy.
 
-For predictable output in tests and applications, pass `now` to `time_ago`. When using timezone-aware datetimes, pass a compatible timezone-aware `now`.
+### Measure execution time
 
-### Validation — `zenith_greeter.validation`
+```python
+from zenith_greeter.timer import measure
 
-- `is_non_empty_string(value)`
-- `is_valid_email(value)`: pragmatic format check, not proof that an address exists.
-- `is_valid_url(value)`: accepts absolute HTTP(S) URLs with a hostname.
+with measure("report") as timer:
+    generate_report()
 
-These helpers are intentionally lightweight; use application-specific rules where stronger validation is required.
+print(timer.elapsed)
+```
 
-### Files and JSON — `zenith_greeter.files`
+### Paginate a finite collection
 
-- `ensure_directory(path)`: create a directory and parent directories.
-- `read_json(path, encoding="utf-8")`
-- `write_json(path, data, indent=2, encoding="utf-8", create_parents=True)`
-- `file_size(path)`: return bytes.
+```python
+from zenith_greeter.pagination import paginate
+page = paginate(records, page=2, per_page=20)
+print(page.items, page.total_pages, page.has_next)
+```
 
-**Caution:** `write_json` overwrites an existing target file. `read_json` and file helpers propagate filesystem and JSON parsing errors so callers can handle them explicitly. Do not load untrusted JSON into sensitive workflows without application-level checks.
+This helper materializes its iterable in memory. Use database-level pagination for large querysets or datasets.
 
-### Environment variables — `zenith_greeter.environment`
+## Behaviour and limitations
 
-- `get_env(name, default=None)`
-- `get_env_bool(name, default=False)`: recognizes `1/0`, `true/false`, `yes/no`, and `on/off`.
-- `get_env_int(name, default=None)`
+- The package uses only the Python standard library.
+- Validators are convenience checks, not authoritative domain validation.
+- Retry only idempotent or safely repeatable operations; retries may repeat side effects.
+- The TTL cache is process-local and is not shared across multiple workers.
+- Pagination is intended for finite in-memory collections.
+- File-writing functions may overwrite an existing target file.
+- Use `identifiers.random_token` for security-sensitive tokens; ordinary pseudo-random strings are not security tokens.
+- MD5 is for compatibility/checksum use only, never password storage.
 
-Invalid boolean or integer values raise `ValueError`. The package reads the process environment only; it does not automatically read `.env` files.
-
-## Error handling
-
-Functions validate common invalid inputs and raise `TypeError` or `ValueError` where appropriate. File operations may raise standard exceptions such as `FileNotFoundError`, `PermissionError`, or `json.JSONDecodeError`; catch these at the application boundary when needed.
-
-## Development and tests
+## Development
 
 ```bash
 python -m pip install -e .
@@ -136,8 +122,4 @@ python -m build
 python -m twine check dist/*
 ```
 
-The test suite uses Python's built-in `unittest`. No runtime third-party dependencies are required.
-
-## Versioning
-
-This toolkit upgrade is version **0.2.0**. Existing greeting users can continue importing `Greeter` from `zenith_greeter`; new modules are additive.
+New helpers are additive. Existing `Greeter` and earlier top-level imports remain available.
