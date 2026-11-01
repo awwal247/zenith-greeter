@@ -121,5 +121,10 @@ def parse_query_string(url: str) -> Dict[str, list]:
     if not isinstance(url, str):
         raise TypeError("url must be a string")
     parsed = urlparse(url)
-    query = parsed.query if parsed.scheme or parsed.netloc or parsed.path else url.lstrip("?")
+    # A bare query string is parsed by urllib as a path, not as parsed.query.
+    # Full URLs and strings containing '?' use the query component.
+    if parsed.scheme or parsed.netloc or "?" in url:
+        query = parsed.query
+    else:
+        query = url.lstrip("?")
     return parse_qs(query)
